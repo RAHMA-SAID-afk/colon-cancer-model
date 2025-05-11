@@ -1,10 +1,15 @@
 import React from 'react';
+
 function Home() {
+
   return (
-    <div>
-      <h2>Welcome</h2>
-      <p>AI-powered colon cancer detection system. Navigate from the sidebar.</p>
+    <div className="main-content home-page">
+      <h1>👋 Welcome to the Colon Cancer Prediction System</h1>
+      <p className="intro-text">
+        This system helps medical professionals manage, predict, and review colon cancer cases with AI support.
+      </p>
     </div>
   );
 }
+
 export default Home;

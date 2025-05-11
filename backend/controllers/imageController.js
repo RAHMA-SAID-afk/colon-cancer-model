@@ -1,4 +1,6 @@
 const Image = require('../models/imageModel');
+const Prediction = require('../models/predictionModel');
+const path = require('path');
 
 exports.getImages = (req, res) => {
   Image.getAllImages((err, results) => {
@@ -35,20 +37,38 @@ exports.deleteImage = (req, res) => {
     res.json({ message: 'Image deleted successfully' });
   });
 };
+
 exports.uploadImage = (req, res) => {
-  const { patient_id, uploaded_by } = req.body;
+  const { patient_id, uploaded_by, result, confidence } = req.body;
   const imagePath = req.file ? req.file.path : null;
 
   if (!imagePath) {
     return res.status(400).json({ message: 'No image uploaded' });
   }
 
-  Image.saveImageWithUpload(patient_id, uploaded_by, imagePath, (err, result) => {
+  if (!result || !confidence) {
+    return res.status(400).json({ message: 'Missing prediction result or confidence' });
+  }
+
+  Image.saveImageWithUpload(patient_id, uploaded_by, imagePath, (err, resultInsert) => {
     if (err) return res.status(500).json({ error: err });
-    res.status(201).json({
-      message: 'Image uploaded successfully',
-      id: result.insertId,
-      imagePath
+
+    const image_id = resultInsert.insertId;
+
+    const prediction = {
+      image_id,
+      predicted_by: uploaded_by,
+      result,
+      confidence,
+    };
+
+    Prediction.createPrediction(prediction, (err) => {
+      if (err) return res.status(500).json({ error: err });
+
+      res.status(201).json({
+        message: '✅ Image uploaded and prediction saved',
+        prediction: { label: result, confidence },
+      });
     });
   });
 };
